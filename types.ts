@@ -120,6 +120,9 @@ export interface Entity {
   lastAttack: number;
   attackAnimTimer?: number;
   isHit?: number;
+  isSleeping?: boolean;
+  isDead?: boolean;
+  deathTime?: number;
 }
 
 export interface Projectile {

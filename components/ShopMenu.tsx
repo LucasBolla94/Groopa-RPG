@@ -35,7 +35,7 @@ const ShopMenu: React.FC<Props> = ({ npc, playerStats, onBuy, onClose }) => {
                             const ctx = el.getContext('2d');
                             if (ctx) {
                                 ctx.clearRect(0, 0, 32, 32);
-                                ctx.drawImage(getItemSprite(item.name), 0, 0);
+                                ctx.drawImage(getItemSprite(item.type, item.name), 0, 0);
                             }
                         }
                     }}

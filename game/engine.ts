@@ -48,6 +48,7 @@ export function update(state: GameState, deltaTime: number, keys: Set<string>, m
   if (newState.activeShopNPCId) return newState;
 
   const player = newState.player;
+  if (player.isDead) return newState;
   const baseSpeed = player.stats.speed * (deltaTime / 16);
   
   let inputX = 0; let inputY = 0;
@@ -119,8 +120,10 @@ function handleInteraction(state: GameState) {
                 } else if (house && house.ownerId === 'player') {
                     obj.isOpen = !obj.isOpen;
                 }
-            } else if (obj.type === 'bed') {
+    } else if (obj.type === 'bed') {
                 state.player.stats.hp = state.player.stats.maxHp;
+                state.player.isSleeping = true;
+                setTimeout(() => { state.player.isSleeping = false; }, 1200);
                 addChatMessage(state, "You rested and recovered your Health!", 'level');
             } else if (obj.type === 'fountain') {
                 addChatMessage(state, "The water is fresh and cool.", 'system');
@@ -168,8 +171,16 @@ function updateProjectiles(state: GameState, deltaTime: number) {
 }
 
 function updateMonsters(state: GameState, deltaTime: number, timestamp: number) {
-    state.monsters = state.monsters.filter(m => m.stats.hp > 0);
+    state.monsters = state.monsters.filter(m => {
+        if (m.stats.hp > 0) return true;
+        if (!m.deathTime) m.deathTime = timestamp;
+        return timestamp - m.deathTime < 700;
+    });
     state.monsters.forEach(m => {
+        if (m.stats.hp <= 0) {
+            m.isDead = true;
+            return;
+        }
         const d = Math.sqrt(Math.pow(m.x - state.player.x, 2) + Math.pow(m.y - state.player.y, 2)) / TILE_SIZE;
         if (d < CHASE_RADIUS) {
             const angle = Math.atan2(state.player.y - m.y, state.player.x - m.x);
@@ -208,6 +219,10 @@ function applyDamage(state: GameState, target: Entity, rawAtk: number, isToPlaye
     const damage = Math.max(1, rawAtk - Math.floor(target.stats.def / 2));
     target.stats.hp -= damage; target.isHit = Date.now();
     state.floatingTexts.push({ id: generateId(), text: damage.toString(), x: target.x + 16, y: target.y, color: isToPlayer ? '#ff4d6d' : '#f8f9fa', life: 1000 });
+    if (target.stats.hp <= 0 && isToPlayer) {
+        state.player.isDead = true;
+        state.player.deathTime = Date.now();
+    }
     if (target.stats.hp <= 0 && !isToPlayer) { 
         state.player.stats.exp += target.stats.exp; 
         state.player.stats.gold += Math.floor(Math.random() * 20) + 10;

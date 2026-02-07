@@ -12,14 +12,14 @@ interface Props {
   onUnequip: (slot: keyof Equipment) => void;
 }
 
-const ItemIcon: React.FC<{ name: string }> = ({ name }) => (
+const ItemIcon: React.FC<{ name: string; type: Item['type'] }> = ({ name, type }) => (
     <canvas 
         ref={el => {
             if (el) {
                 const ctx = el.getContext('2d');
                 if (ctx) {
                     ctx.clearRect(0, 0, 32, 32);
-                    ctx.drawImage(getItemSprite(name), 0, 0);
+                    ctx.drawImage(getItemSprite(type, name), 0, 0);
                 }
             }
         }}
@@ -40,7 +40,7 @@ const InventoryMenu: React.FC<Props> = ({ inventory, equipment, stats, onClose, 
         className="group relative w-12 h-12 bg-slate-800 border-2 border-slate-700 flex items-center justify-center cursor-pointer hover:border-yellow-500 transition-colors"
       >
         {item ? (
-          <ItemIcon name={item.name} />
+          <ItemIcon name={item.name} type={item.type} />
         ) : (
           <span className="text-[8px] text-slate-600 uppercase font-bold text-center">{label}</span>
         )}
@@ -101,7 +101,7 @@ const InventoryMenu: React.FC<Props> = ({ inventory, equipment, stats, onClose, 
                       onClick={() => item && onEquip(item)}
                       className="group relative w-10 h-10 bg-slate-800 border border-slate-700 flex items-center justify-center cursor-pointer hover:border-green-500 transition-all active:scale-95"
                     >
-                        {item && <ItemIcon name={item.name} />}
+                        {item && <ItemIcon name={item.name} type={item.type} />}
                         {item && item.stats && (
                             <div className="absolute hidden group-hover:block bottom-full right-0 mb-2 w-32 bg-slate-950 border border-slate-700 p-2 text-[8px] z-[60] pointer-events-none shadow-xl">
                                 <div className="text-green-400 font-bold mb-1">{item.name}</div>

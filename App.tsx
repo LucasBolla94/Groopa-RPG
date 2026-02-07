@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ClassType, GameState, Stats, Item, Equipment, MapId, ChatMessage } from './types';
 import { createInitialState, update, allocateAttribute, equipItem, unequipItem, buyItem, addChatMessage } from './game/engine';
 import { getTileSprite, getEntitySprite, getInteractiveSprite, getCursorDataUrl } from './game/sprites';
@@ -36,7 +36,7 @@ const App: React.FC = () => {
   const [activeShopNPCId, setActiveShopNPCId] = useState<string | null>(null);
   const [isChatting, setIsChatting] = useState(false);
 
-  const cursorUrl = useMemo(() => getCursorDataUrl(), []);
+  const [cursorUrl, setCursorUrl] = useState('');
 
   const playSound = (type: 'click' | 'hit' | 'level') => {
     if (!soundEnabled) return;
@@ -84,6 +84,10 @@ const App: React.FC = () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, [handleKeyDown, handleKeyUp, handleMouseDown, handleMouseUp, handleMouseMove]);
+
+  useEffect(() => {
+    setCursorUrl(getCursorDataUrl());
+  }, []);
 
   useEffect(() => {
     if (screen !== 'game') return;
@@ -139,8 +143,13 @@ const App: React.FC = () => {
         if (obj.type === 'door') {
             const house = state.houses.find(h => h.id === obj.houseId);
             if (house && house.ownerId === null) {
-                ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center';
-                ctx.fillText('HOUSE $15k', obj.x * TILE_SIZE + 16, obj.y * TILE_SIZE - 4);
+                const dx = (obj.x * TILE_SIZE + 16) - (state.player.x + 16);
+                const dy = (obj.y * TILE_SIZE + 16) - (state.player.y + 16);
+                const dist = Math.hypot(dx, dy);
+                if (dist < 64) {
+                  ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center';
+                  ctx.fillText('HOUSE $15k', obj.x * TILE_SIZE + 16, obj.y * TILE_SIZE - 4);
+                }
             }
         }
     });
@@ -148,14 +157,19 @@ const App: React.FC = () => {
     state.npcs.forEach(n => {
         const frame = Math.floor(timestamp / 400) % 2;
         ctx.drawImage(getEntitySprite(n.type, 'down', frame), n.x, n.y);
-        ctx.fillStyle = 'white'; ctx.font = 'bold 12px Courier New'; ctx.textAlign = 'center'; ctx.fillText(n.name, n.x + 16, n.y - 14);
-        ctx.fillStyle = '#fca311'; ctx.font = 'bold 10px Courier New'; ctx.fillText('[E] Trade', n.x + 16, n.y - 4);
+        const dx = (n.x + 16) - (state.player.x + 16);
+        const dy = (n.y + 16) - (state.player.y + 16);
+        const dist = Math.hypot(dx, dy);
+        if (dist < 64) {
+          ctx.fillStyle = 'white'; ctx.font = 'bold 12px Courier New'; ctx.textAlign = 'center'; ctx.fillText(n.name, n.x + 16, n.y - 14);
+          ctx.fillStyle = '#fca311'; ctx.font = 'bold 10px Courier New'; ctx.fillText('[E] Trade', n.x + 16, n.y - 4);
+        }
     });
 
     state.monsters.forEach(m => {
         const isHit = m.isHit && (timestamp - m.isHit < 200);
         const frame = Math.floor(timestamp / 200) % 2;
-        ctx.drawImage(getEntitySprite(m.type, m.direction, frame, !!isHit), m.x, m.y);
+        ctx.drawImage(getEntitySprite(m.type, m.direction, frame, !!isHit, m.isDead ? 'dead' : undefined), m.x, m.y);
         ctx.fillStyle = 'black'; ctx.fillRect(m.x + 4, m.y - 8, 24, 4);
         ctx.fillStyle = 'red'; ctx.fillRect(m.x + 4, m.y - 8, 24 * (m.stats.hp / m.stats.maxHp), 4);
     });
@@ -163,7 +177,7 @@ const App: React.FC = () => {
     const p = state.player;
     const isPHit = p.isHit && (timestamp - p.isHit < 200);
     const pFrame = Math.floor(timestamp / 200) % 2;
-    ctx.drawImage(getEntitySprite(p.classType, p.direction, pFrame, !!isPHit), p.x, p.y);
+    ctx.drawImage(getEntitySprite(p.classType, p.direction, pFrame, !!isPHit, p.isDead ? 'dead' : p.isSleeping ? 'sleeping' : undefined), p.x, p.y);
 
     state.projectiles.forEach(proj => { ctx.fillStyle = proj.color; ctx.beginPath(); ctx.arc(proj.x, proj.y, 4, 0, Math.PI * 2); ctx.fill(); });
     state.floatingTexts.forEach(ft => { ctx.fillStyle = ft.color; ctx.font = 'bold 16px Courier New'; ctx.textAlign = 'center'; ctx.fillText(ft.text, ft.x, ft.y); });
