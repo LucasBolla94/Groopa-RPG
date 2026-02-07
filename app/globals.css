@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #000;
+  font-family: "Courier New", Courier, monospace;
+}
+
+canvas {
+  display: block;
+  image-rendering: pixelated;
+}
+
+* {
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
