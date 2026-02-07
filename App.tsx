@@ -35,6 +35,7 @@ const App: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [activeShopNPCId, setActiveShopNPCId] = useState<string | null>(null);
   const [isChatting, setIsChatting] = useState(false);
+  const [isChatInputEmpty, setIsChatInputEmpty] = useState(true);
 
   const [cursorUrl, setCursorUrl] = useState('');
 
@@ -60,7 +61,13 @@ const App: React.FC = () => {
     const key = e.key.toLowerCase();
     if (key === 'escape' && screen === 'game') { setShowEscMenu(prev => !prev); playSound('click'); keysRef.current.clear(); return; }
     if (showEscMenu) return;
-    if (key === 'enter' && screen === 'game') { setIsChatting(prev => !prev); playSound('click'); return; }
+    if (key === 'enter' && screen === 'game') {
+      if (isChatting) {
+        if (isChatInputEmpty) { setIsChatting(false); playSound('click'); }
+        return;
+      }
+      setIsChatting(true); playSound('click'); return;
+    }
     if (isChatting) return;
     keysRef.current.add(key);
     if (screen === 'game') {
@@ -199,7 +206,13 @@ const App: React.FC = () => {
             </div>
           </div>
           {hudStats && <HUD stats={hudStats} />}
-          <Chat messages={messages} isChatting={isChatting} onSendMessage={(txt) => { if (gameStateRef.current) addChatMessage(gameStateRef.current, `${characterName}: ${txt}`, 'system'); }} onToggleChat={(val) => setIsChatting(val ?? !isChatting)} />
+          <Chat
+            messages={messages}
+            isChatting={isChatting}
+            onSendMessage={(txt) => { if (gameStateRef.current) addChatMessage(gameStateRef.current, `${characterName}: ${txt}`, 'system'); }}
+            onToggleChat={(val) => setIsChatting(val ?? !isChatting)}
+            onInputEmptyChange={setIsChatInputEmpty}
+          />
           {showCharMenu && hudStats && <CharMenu stats={hudStats} name={characterName} onClose={() => setShowCharMenu(false)} onAllocate={(a) => { playSound('click'); if(gameStateRef.current) gameStateRef.current = allocateAttribute(gameStateRef.current, a); }} />}
           {showInventory && hudStats && equipment && <InventoryMenu inventory={inventory} equipment={equipment} stats={hudStats} onClose={() => setShowInventory(false)} onEquip={(item) => { playSound('click'); if(gameStateRef.current) gameStateRef.current = equipItem(gameStateRef.current, item); }} onUnequip={(slot) => { playSound('click'); if(gameStateRef.current) gameStateRef.current = unequipItem(gameStateRef.current, slot); }} />}
           {activeShopNPCId && hudStats && gameStateRef.current && <ShopMenu npc={gameStateRef.current.npcs.find(n => n.id === activeShopNPCId)!} playerStats={hudStats} onClose={() => { playSound('click'); if(gameStateRef.current) gameStateRef.current.activeShopNPCId = null; }} onBuy={(item) => { playSound('click'); if(gameStateRef.current) gameStateRef.current = buyItem(gameStateRef.current, item); }} />}

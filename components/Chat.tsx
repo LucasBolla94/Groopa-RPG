@@ -7,9 +7,10 @@ interface Props {
   isChatting: boolean;
   onSendMessage: (text: string) => void;
   onToggleChat: (force?: boolean) => void;
+  onInputEmptyChange?: (isEmpty: boolean) => void;
 }
 
-const Chat: React.FC<Props> = ({ messages, isChatting, onSendMessage, onToggleChat }) => {
+const Chat: React.FC<Props> = ({ messages, isChatting, onSendMessage, onToggleChat, onInputEmptyChange }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState('');
@@ -25,6 +26,10 @@ const Chat: React.FC<Props> = ({ messages, isChatting, onSendMessage, onToggleCh
       inputRef.current.focus();
     }
   }, [isChatting]);
+
+  useEffect(() => {
+    onInputEmptyChange?.(inputValue.trim().length === 0);
+  }, [inputValue, onInputEmptyChange]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,9 +51,9 @@ const Chat: React.FC<Props> = ({ messages, isChatting, onSendMessage, onToggleCh
   };
 
   return (
-    <div className={`absolute bottom-8 left-8 w-[500px] flex flex-col pointer-events-none transition-transform duration-300 ${isChatting ? 'scale-[1.02]' : 'scale-100'}`}>
+    <div className={`absolute bottom-4 left-4 w-[500px] flex flex-col pointer-events-none transition-transform duration-300 ${isChatting ? 'scale-[1.02]' : 'scale-100'}`}>
       {/* Messages Window */}
-      <div className="h-72 bg-black/85 border-2 border-slate-700/60 rounded-t-2xl p-5 backdrop-blur-2xl flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
+      <div className="h-72 bg-black/60 border-2 border-slate-700/60 rounded-t-2xl p-5 backdrop-blur-2xl flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
         <div className="text-[11px] uppercase font-black text-slate-500 mb-4 border-b border-slate-800 pb-3 tracking-[0.4em] flex justify-between items-center">
           <span className="flex items-center gap-2">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
