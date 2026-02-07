@@ -30,7 +30,8 @@ const CharacterPreview: React.FC<{ type: ClassType }> = ({ type }) => {
       ctx.fill();
 
       const animFrame = Math.floor(Date.now() / 400) % 2;
-      const sprite = getEntitySprite(type, 'down', animFrame, false, false);
+      // Fixed: getEntitySprite expects 3-4 arguments, removed extra 5th argument.
+      const sprite = getEntitySprite(type, 'down', animFrame, false);
       
       // Scale up 6x
       const size = 192; 

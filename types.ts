@@ -17,7 +17,11 @@ export enum TileType {
   FLOOR_DARK = 8,
   FLOOR_WOOD = 9,
   ROOF = 10,
-  FLOOR_BRICK = 11
+  FLOOR_BRICK = 11,
+  DOOR_CLOSED = 12,
+  DOOR_OPEN = 13,
+  BED = 14,
+  CHEST = 15
 }
 
 export enum MapId {
@@ -40,6 +44,22 @@ export interface Item {
     mana?: number;
     speed?: number;
   };
+}
+
+export interface InteractiveObject {
+  id: string;
+  x: number;
+  y: number;
+  type: 'door' | 'chest' | 'bed' | 'fountain' | 'stall';
+  isOpen?: boolean;
+  houseId?: string;
+}
+
+export interface House {
+  id: string;
+  ownerId: string | null;
+  price: number;
+  doorPos: { x: number, y: number };
 }
 
 export interface NPC {
@@ -141,6 +161,8 @@ export interface GameState {
   player: Entity & { classType: ClassType };
   monsters: Monster[];
   npcs: NPC[];
+  interactiveObjects: InteractiveObject[];
+  houses: House[];
   projectiles: Projectile[];
   floatingTexts: FloatingText[];
   messages: ChatMessage[];
